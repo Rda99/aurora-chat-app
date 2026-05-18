@@ -32,31 +32,38 @@ export function AssistantMessage({ message, streaming, onRegenerate }: Props) {
           <Markdown>{message.content || ""}</Markdown>
         </div>
         {!streaming && message.content && (
-          <div className="mt-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-            <IconBtn
-              onClick={copy}
-              label={copied ? "Copied" : "Copy"}
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-            />
-            {onRegenerate && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <IconBtn
-                onClick={onRegenerate}
-                label="Regenerate"
-                icon={<RefreshCw size={14} />}
+                onClick={copy}
+                label={copied ? "Copied" : "Copy"}
+                icon={copied ? <Check size={14} /> : <Copy size={14} />}
               />
+              {onRegenerate && (
+                <IconBtn
+                  onClick={onRegenerate}
+                  label="Regenerate"
+                  icon={<RefreshCw size={14} />}
+                />
+              )}
+              <IconBtn
+                onClick={() => setFeedback(feedback === "up" ? null : "up")}
+                label="Good response"
+                active={feedback === "up"}
+                icon={<ThumbsUp size={14} />}
+              />
+              <IconBtn
+                onClick={() => setFeedback(feedback === "down" ? null : "down")}
+                label="Bad response"
+                active={feedback === "down"}
+                icon={<ThumbsDown size={14} />}
+              />
+            </div>
+            {message.usage && (
+              <span className="text-[11px] text-muted-foreground/70 opacity-0 transition-opacity group-hover:opacity-100">
+                {message.usage.prompt} in · {message.usage.completion} out · {message.usage.total} tokens
+              </span>
             )}
-            <IconBtn
-              onClick={() => setFeedback(feedback === "up" ? null : "up")}
-              label="Good response"
-              active={feedback === "up"}
-              icon={<ThumbsUp size={14} />}
-            />
-            <IconBtn
-              onClick={() => setFeedback(feedback === "down" ? null : "down")}
-              label="Bad response"
-              active={feedback === "down"}
-              icon={<ThumbsDown size={14} />}
-            />
           </div>
         )}
       </div>

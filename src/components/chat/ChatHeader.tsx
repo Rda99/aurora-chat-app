@@ -1,18 +1,22 @@
 import { useState } from "react";
 import type { Chat, Settings } from "@/lib/chat/types";
 import { getProvider } from "@/lib/chat/providers";
-import { Download, Menu, PanelLeftClose } from "lucide-react";
+import { ChevronDown, Download, Menu, PanelLeftClose } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 interface Props {
   chat: Chat | null;
   settings: Settings;
+  sessionTokens: number;
   onRename: (title: string) => void;
+  onChangeModel: (model: string) => void;
   onToggleSidebar: () => void;
   sidebarHidden: boolean;
   onOpenMobileSidebar: () => void;
@@ -21,7 +25,9 @@ interface Props {
 export function ChatHeader({
   chat,
   settings,
+  sessionTokens,
   onRename,
+  onChangeModel,
   onToggleSidebar,
   sidebarHidden,
   onOpenMobileSidebar,
@@ -102,15 +108,46 @@ export function ChatHeader({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <div className="hidden items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground sm:flex">
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: provider.dot }}
-          />
-          <span className="font-medium text-foreground/80">{provider.name}</span>
-          <span className="text-muted-foreground/60">·</span>
-          <span className="max-w-[160px] truncate">{settings.model || "no model"}</span>
-        </div>
+        {sessionTokens > 0 && (
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">
+            Session: {sessionTokens.toLocaleString()} tok
+          </span>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="hidden items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-accent sm:flex"
+              title="Switch model"
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: provider.dot }}
+              />
+              <span className="font-medium text-foreground/80">{provider.name}</span>
+              <span className="text-muted-foreground/60">·</span>
+              <span className="max-w-[160px] truncate">{settings.model || "no model"}</span>
+              <ChevronDown size={11} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>Switch model · {provider.name}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {provider.models.length === 0 ? (
+              <DropdownMenuItem disabled>No presets — set in Settings</DropdownMenuItem>
+            ) : (
+              provider.models.map((m) => (
+                <DropdownMenuItem
+                  key={m}
+                  onClick={() => onChangeModel(m)}
+                  className="font-mono text-xs"
+                >
+                  {m === settings.model ? "● " : "  "}
+                  {m}
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         {chat && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
