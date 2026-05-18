@@ -17,13 +17,14 @@ interface Props {
   onStop?: () => void;
   streaming?: boolean;
   disabled?: boolean;
+  modelSupportsVision?: boolean;
 }
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
-  { onSend, onStop, streaming, disabled },
+  { onSend, onStop, streaming, disabled, modelSupportsVision = true },
   ref,
 ) {
   const [value, setValue] = useState("");
