@@ -1,10 +1,19 @@
 export type Role = "system" | "user" | "assistant";
 
+export interface TokenUsage {
+  prompt: number;
+  completion: number;
+  total: number;
+}
+
 export interface Message {
   id: string;
   role: Role;
   content: string;
+  /** Data-URL images attached to a user message (multimodal) */
+  images?: string[];
   createdAt: number;
+  usage?: TokenUsage;
 }
 
 export interface Chat {
@@ -12,6 +21,7 @@ export interface Chat {
   title: string;
   createdAt: number;
   updatedAt: number;
+  pinned?: boolean;
   messages: Message[];
 }
 

@@ -10,7 +10,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useChats } from "@/lib/chat/useChats";
 import { useSettings } from "@/lib/chat/useSettings";
 import { ApiError, streamChat } from "@/lib/chat/api";
-import type { Message } from "@/lib/chat/types";
+import type { Chat, Message } from "@/lib/chat/types";
 
 export const Route = createFileRoute("/")({
   component: ChatApp,
@@ -24,6 +24,7 @@ function ChatApp() {
   const [mobileSidebar, setMobileSidebar] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [awaitingFirstToken, setAwaitingFirstToken] = useState(false);
+  const [sessionTokens, setSessionTokens] = useState(0);
   const inputRef = useRef<InputBarHandle>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -70,6 +71,10 @@ function ChatApp() {
             acc += delta;
             chatsApi.updateMessage(chatId, assistantId, acc);
           },
+          onUsage: (usage) => {
+            chatsApi.setMessageUsage(chatId, assistantId, usage);
+            setSessionTokens((s) => s + usage.total);
+          },
         });
       } catch (e) {
         handleError(e);
@@ -90,17 +95,18 @@ function ChatApp() {
   );
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, images?: string[]) => {
       let chatId = chatsApi.activeId;
       let baseMessages: Message[] = chatsApi.activeChat?.messages ?? [];
       if (!chatId) {
-        chatId = chatsApi.ensureChat(text);
+        chatId = chatsApi.ensureChat(text || "Image conversation");
         baseMessages = [];
       }
       const userMsg: Message = {
         id: chatsApi.uid(),
         role: "user",
         content: text,
+        images,
         createdAt: Date.now(),
       };
       chatsApi.appendMessage(chatId, userMsg);
@@ -108,6 +114,26 @@ function ChatApp() {
       await runCompletion(chatId, history);
     },
     [chatsApi, runCompletion],
+  );
+
+  const handleEditUser = useCallback(
+    async (messageId: string, newContent: string) => {
+      const chat = chatsApi.activeChat;
+      if (!chat || streamingId) return;
+      const original = chat.messages.find((m) => m.id === messageId);
+      if (!original) return;
+      const kept = chatsApi.truncateAt(chat.id, messageId);
+      const newUser: Message = {
+        id: chatsApi.uid(),
+        role: "user",
+        content: newContent,
+        images: original.images,
+        createdAt: Date.now(),
+      };
+      chatsApi.appendMessage(chat.id, newUser);
+      await runCompletion(chat.id, [...kept, newUser]);
+    },
+    [chatsApi, runCompletion, streamingId],
   );
 
   const handleRegenerate = useCallback(async () => {
@@ -120,9 +146,49 @@ function ChatApp() {
     await runCompletion(chat.id, history);
   }, [chatsApi, runCompletion, streamingId]);
 
-  const handleStop = () => {
-    abortRef.current?.abort();
-  };
+  const handleStop = () => abortRef.current?.abort();
+
+  // Backup
+  const exportAll = useCallback(() => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      chats: chatsApi.chats,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nexusai-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${chatsApi.chats.length} chats`);
+  }, [chatsApi.chats]);
+
+  const importAll = useCallback(
+    async (file: File) => {
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const incoming: Chat[] = Array.isArray(parsed)
+          ? parsed
+          : Array.isArray(parsed?.chats)
+            ? parsed.chats
+            : [];
+        if (incoming.length === 0) {
+          toast.error("No chats found in file");
+          return;
+        }
+        chatsApi.importChats(incoming);
+        toast.success(`Imported ${incoming.length} chats`);
+      } catch {
+        toast.error("Invalid backup file");
+      }
+    },
+    [chatsApi],
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -141,54 +207,54 @@ function ChatApp() {
     return () => window.removeEventListener("keydown", onKey);
   }, [chatsApi]);
 
+  const sidebarNode = (closeMobile?: boolean) => (
+    <Sidebar
+      chats={chatsApi.chats}
+      activeId={chatsApi.activeId}
+      onSelect={(id) => {
+        chatsApi.setActive(id);
+        if (closeMobile) setMobileSidebar(false);
+      }}
+      onNew={() => {
+        chatsApi.newChat();
+        if (closeMobile) setMobileSidebar(false);
+      }}
+      onDelete={(id) => chatsApi.deleteChat(id)}
+      onTogglePin={(id) => chatsApi.togglePin(id)}
+      onOpenSettings={() => {
+        if (closeMobile) setMobileSidebar(false);
+        setSettingsOpen(true);
+      }}
+      onExportAll={exportAll}
+      onImportAll={importAll}
+    />
+  );
+
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
-      {/* Desktop sidebar */}
-      {!sidebarHidden && (
-        <div className="hidden md:block">
-          <Sidebar
-            chats={chatsApi.chats}
-            activeId={chatsApi.activeId}
-            onSelect={(id) => chatsApi.setActive(id)}
-            onNew={() => chatsApi.newChat()}
-            onDelete={(id) => chatsApi.deleteChat(id)}
-            onOpenSettings={() => setSettingsOpen(true)}
-          />
-        </div>
-      )}
+      {!sidebarHidden && <div className="hidden md:block">{sidebarNode(false)}</div>}
 
-      {/* Mobile sidebar */}
       <Sheet open={mobileSidebar} onOpenChange={setMobileSidebar}>
         <SheetContent
           side="left"
           className="w-[280px] border-r border-border bg-[var(--sidebar-bg)] p-0"
         >
-          <Sidebar
-            chats={chatsApi.chats}
-            activeId={chatsApi.activeId}
-            onSelect={(id) => {
-              chatsApi.setActive(id);
-              setMobileSidebar(false);
-            }}
-            onNew={() => {
-              chatsApi.newChat();
-              setMobileSidebar(false);
-            }}
-            onDelete={(id) => chatsApi.deleteChat(id)}
-            onOpenSettings={() => {
-              setMobileSidebar(false);
-              setSettingsOpen(true);
-            }}
-          />
+          {sidebarNode(true)}
         </SheetContent>
       </Sheet>
 
-      {/* Main column */}
       <main className="flex min-w-0 flex-1 flex-col bg-[var(--chat-bg)]">
         <ChatHeader
           chat={chatsApi.activeChat}
           settings={settings}
-          onRename={(t) => chatsApi.activeChat && chatsApi.renameChat(chatsApi.activeChat.id, t)}
+          sessionTokens={sessionTokens}
+          onRename={(t) =>
+            chatsApi.activeChat && chatsApi.renameChat(chatsApi.activeChat.id, t)
+          }
+          onChangeModel={(model) => {
+            updateSettings({ ...settings, model });
+            toast.success(`Model: ${model}`);
+          }}
           onToggleSidebar={() => setSidebarHidden((v) => !v)}
           sidebarHidden={sidebarHidden}
           onOpenMobileSidebar={() => setMobileSidebar(true)}
@@ -199,6 +265,7 @@ function ChatApp() {
           awaitingFirstToken={awaitingFirstToken}
           onPickSuggestion={(t) => sendMessage(t)}
           onRegenerate={handleRegenerate}
+          onEditUser={handleEditUser}
         />
         <InputBar
           ref={inputRef}
