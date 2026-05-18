@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Chat, Message } from "./types";
+import type { Chat, Message, TokenUsage } from "./types";
 import {
   loadActiveId,
   loadChats,
@@ -41,25 +41,22 @@ export function useChats() {
     setActiveIdState(null);
   }, []);
 
-  const ensureChat = useCallback(
-    (firstUserContent: string): string => {
-      const id = uid();
-      const title =
-        firstUserContent.slice(0, 40).trim() +
-        (firstUserContent.length > 40 ? "…" : "");
-      const chat: Chat = {
-        id,
-        title: title || "New chat",
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        messages: [],
-      };
-      setChats((prev) => [chat, ...prev]);
-      setActiveIdState(id);
-      return id;
-    },
-    [],
-  );
+  const ensureChat = useCallback((firstUserContent: string): string => {
+    const id = uid();
+    const title =
+      firstUserContent.slice(0, 40).trim() +
+      (firstUserContent.length > 40 ? "…" : "");
+    const chat: Chat = {
+      id,
+      title: title || "New chat",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: [],
+    };
+    setChats((prev) => [chat, ...prev]);
+    setActiveIdState(id);
+    return id;
+  }, []);
 
   const appendMessage = useCallback((chatId: string, msg: Message) => {
     setChats((prev) =>
@@ -90,17 +87,51 @@ export function useChats() {
     [],
   );
 
-  const deleteChat = useCallback(
-    (chatId: string) => {
-      setChats((prev) => prev.filter((c) => c.id !== chatId));
-      setActiveIdState((curr) => (curr === chatId ? null : curr));
+  const setMessageUsage = useCallback(
+    (chatId: string, msgId: string, usage: TokenUsage) => {
+      setChats((prev) =>
+        prev.map((c) =>
+          c.id === chatId
+            ? {
+                ...c,
+                messages: c.messages.map((m) =>
+                  m.id === msgId ? { ...m, usage } : m,
+                ),
+              }
+            : c,
+        ),
+      );
     },
     [],
   );
 
-  const renameChat = useCallback((chatId: string, title: string) => {
+  /** Truncate a chat at (and including) msgId; returns the kept history (excluding msgId). */
+  const truncateAt = useCallback((chatId: string, msgId: string): Message[] => {
+    let kept: Message[] = [];
     setChats((prev) =>
-      prev.map((c) => (c.id === chatId ? { ...c, title } : c)),
+      prev.map((c) => {
+        if (c.id !== chatId) return c;
+        const idx = c.messages.findIndex((m) => m.id === msgId);
+        if (idx < 0) return c;
+        kept = c.messages.slice(0, idx);
+        return { ...c, messages: kept, updatedAt: Date.now() };
+      }),
+    );
+    return kept;
+  }, []);
+
+  const deleteChat = useCallback((chatId: string) => {
+    setChats((prev) => prev.filter((c) => c.id !== chatId));
+    setActiveIdState((curr) => (curr === chatId ? null : curr));
+  }, []);
+
+  const renameChat = useCallback((chatId: string, title: string) => {
+    setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, title } : c)));
+  }, []);
+
+  const togglePin = useCallback((chatId: string) => {
+    setChats((prev) =>
+      prev.map((c) => (c.id === chatId ? { ...c, pinned: !c.pinned } : c)),
     );
   }, []);
 
@@ -117,6 +148,14 @@ export function useChats() {
     );
   }, []);
 
+  const importChats = useCallback((incoming: Chat[]) => {
+    setChats((prev) => {
+      const map = new Map(prev.map((c) => [c.id, c]));
+      for (const c of incoming) map.set(c.id, c);
+      return Array.from(map.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+    });
+  }, []);
+
   const activeChat = chats.find((c) => c.id === activeId) ?? null;
 
   return {
@@ -129,9 +168,13 @@ export function useChats() {
     ensureChat,
     appendMessage,
     updateMessage,
+    setMessageUsage,
+    truncateAt,
     deleteChat,
     renameChat,
+    togglePin,
     removeLastAssistant,
+    importChats,
     uid,
   };
 }

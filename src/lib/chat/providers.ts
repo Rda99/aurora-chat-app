@@ -9,6 +9,8 @@ export interface ProviderPreset {
   defaultModel: string;
   modelPlaceholder: string;
   requiresKey: boolean;
+  /** Curated quick-switch options */
+  models: string[];
 }
 
 export const PROVIDERS: ProviderPreset[] = [
@@ -21,6 +23,7 @@ export const PROVIDERS: ProviderPreset[] = [
     defaultModel: "qwen3:7b",
     modelPlaceholder: "qwen3:7b",
     requiresKey: false,
+    models: ["qwen3:7b", "qwen3:14b", "llama3.1:8b", "mistral:7b", "phi3:3.8b"],
   },
   {
     id: "openrouter",
@@ -28,9 +31,19 @@ export const PROVIDERS: ProviderPreset[] = [
     label: "Cloud · Free tier",
     dot: "#3b82f6",
     endpoint: "https://openrouter.ai/api/v1",
-    defaultModel: "qwen/qwen3-7b",
-    modelPlaceholder: "qwen/qwen3-7b",
+    defaultModel: "qwen/qwen3-32b",
+    modelPlaceholder: "qwen/qwen3-32b",
     requiresKey: true,
+    models: [
+      "qwen/qwen3-32b",
+      "qwen/qwen3-235b-a22b",
+      "qwen/qwen3-8b",
+      "qwen/qwen-2.5-72b-instruct",
+      "anthropic/claude-3.5-sonnet",
+      "openai/gpt-4o-mini",
+      "meta-llama/llama-3.3-70b-instruct",
+      "google/gemini-2.0-flash-exp:free",
+    ],
   },
   {
     id: "groq",
@@ -38,9 +51,15 @@ export const PROVIDERS: ProviderPreset[] = [
     label: "Ultra-fast · Free tier",
     dot: "#a855f7",
     endpoint: "https://api.groq.com/openai/v1",
-    defaultModel: "llama3-70b-8192",
-    modelPlaceholder: "llama3-70b-8192",
+    defaultModel: "llama-3.3-70b-versatile",
+    modelPlaceholder: "llama-3.3-70b-versatile",
     requiresKey: true,
+    models: [
+      "llama-3.3-70b-versatile",
+      "llama-3.1-8b-instant",
+      "mixtral-8x7b-32768",
+      "qwen-2.5-32b",
+    ],
   },
   {
     id: "together",
@@ -51,6 +70,11 @@ export const PROVIDERS: ProviderPreset[] = [
     defaultModel: "Qwen/Qwen2.5-7B-Instruct-Turbo",
     modelPlaceholder: "Qwen/Qwen2.5-7B-Instruct-Turbo",
     requiresKey: true,
+    models: [
+      "Qwen/Qwen2.5-7B-Instruct-Turbo",
+      "Qwen/Qwen2.5-72B-Instruct-Turbo",
+      "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    ],
   },
   {
     id: "openai",
@@ -61,6 +85,7 @@ export const PROVIDERS: ProviderPreset[] = [
     defaultModel: "gpt-4o-mini",
     modelPlaceholder: "gpt-4o-mini",
     requiresKey: true,
+    models: ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1"],
   },
   {
     id: "custom",
@@ -71,6 +96,7 @@ export const PROVIDERS: ProviderPreset[] = [
     defaultModel: "",
     modelPlaceholder: "your-model-name",
     requiresKey: false,
+    models: [],
   },
 ];
 

@@ -1,4 +1,4 @@
-import type { Message, Settings } from "./types";
+import type { Message, Settings, TokenUsage } from "./types";
 
 export class ApiError extends Error {
   constructor(
@@ -30,11 +30,32 @@ const endpointUrl = (settings: Settings, path: string) => {
   return `${base}${path}`;
 };
 
+type ApiContent =
+  | string
+  | Array<
+      | { type: "text"; text: string }
+      | { type: "image_url"; image_url: { url: string } }
+    >;
+
+const toApiContent = (m: Message): ApiContent => {
+  if (m.role === "user" && m.images && m.images.length > 0) {
+    return [
+      { type: "text", text: m.content },
+      ...m.images.map((url) => ({
+        type: "image_url" as const,
+        image_url: { url },
+      })),
+    ];
+  }
+  return m.content;
+};
+
 export interface StreamArgs {
   settings: Settings;
   messages: Message[];
   signal?: AbortSignal;
   onDelta: (delta: string) => void;
+  onUsage?: (usage: TokenUsage) => void;
 }
 
 export async function streamChat({
@@ -42,6 +63,7 @@ export async function streamChat({
   messages,
   signal,
   onDelta,
+  onUsage,
 }: StreamArgs): Promise<void> {
   const apiMessages = [
     ...(settings.systemPrompt.trim()
@@ -49,16 +71,19 @@ export async function streamChat({
       : []),
     ...messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({ role: m.role, content: m.content })),
+      .map((m) => ({ role: m.role, content: toApiContent(m) })),
   ];
 
-  const body = {
+  const body: Record<string, unknown> = {
     model: settings.model,
     messages: apiMessages,
     stream: settings.stream,
     temperature: settings.temperature,
     max_tokens: settings.maxTokens,
   };
+  if (settings.stream) {
+    body.stream_options = { include_usage: true };
+  }
 
   let res: Response;
   try {
@@ -82,10 +107,21 @@ export async function streamChat({
     throw new ApiError(res.status, txt || `HTTP ${res.status}`);
   }
 
+  const parseUsage = (raw: any) => {
+    const u = raw?.usage;
+    if (!u || !onUsage) return;
+    onUsage({
+      prompt: u.prompt_tokens ?? 0,
+      completion: u.completion_tokens ?? 0,
+      total: u.total_tokens ?? (u.prompt_tokens ?? 0) + (u.completion_tokens ?? 0),
+    });
+  };
+
   if (!settings.stream || !res.body) {
     const json = await res.json();
     const content = json?.choices?.[0]?.message?.content ?? "";
     if (content) onDelta(content);
+    parseUsage(json);
     return;
   }
 
@@ -110,6 +146,7 @@ export async function streamChat({
         const parsed = JSON.parse(data);
         const delta = parsed?.choices?.[0]?.delta?.content;
         if (typeof delta === "string" && delta) onDelta(delta);
+        parseUsage(parsed);
       } catch {
         // ignore parse errors mid-stream
       }
@@ -127,7 +164,6 @@ export async function testConnection(settings: Settings): Promise<void> {
     if (res.status === 401) throw new ApiError(401, "Invalid API key");
   } catch (e) {
     if (e instanceof ApiError) throw e;
-    // fall through to chat-completion probe
   }
 
   const res = await fetch(endpointUrl(settings, "/chat/completions"), {
