@@ -50,6 +50,10 @@ export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
+    if (!modelSupportsVision) {
+      toast.error("Current model has no vision support. Switch to a vision-capable model (e.g. gpt-4o, claude-3.5, gemini, llama-3.2-vision) to attach images.");
+      return;
+    }
     const next: string[] = [];
     for (const f of Array.from(files)) {
       if (!f.type.startsWith("image/")) {
