@@ -9,7 +9,7 @@ import { SettingsModal } from "@/components/chat/SettingsModal";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useChats } from "@/lib/chat/useChats";
 import { useSettings } from "@/lib/chat/useSettings";
-import { ApiError, streamChat } from "@/lib/chat/api";
+import { ApiError, isVisionModel, streamChat } from "@/lib/chat/api";
 import type { Chat, Message } from "@/lib/chat/types";
 
 export const Route = createFileRoute("/")({
