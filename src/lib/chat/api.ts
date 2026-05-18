@@ -37,15 +37,35 @@ type ApiContent =
       | { type: "image_url"; image_url: { url: string } }
     >;
 
-const toApiContent = (m: Message): ApiContent => {
+// Heuristic: which model slugs accept multimodal image_url content.
+export const isVisionModel = (model: string): boolean => {
+  const m = model.toLowerCase();
+  return (
+    /gpt-4o|gpt-4\.1|o1|o3|o4/.test(m) ||
+    /claude-3|claude-4|claude-opus|claude-sonnet|claude-haiku/.test(m) ||
+    /gemini/.test(m) ||
+    /llava|bakllava|moondream|cogvlm|minicpm-v/.test(m) ||
+    /llama-?3\.2-(11|90)b.*vision|llama-?4|scout|maverick/.test(m) ||
+    /qwen.*vl|qwen2?-?vl|qwen3-vl/.test(m) ||
+    /pixtral/.test(m) ||
+    /vision/.test(m)
+  );
+};
+
+const toApiContent = (m: Message, vision: boolean): ApiContent => {
   if (m.role === "user" && m.images && m.images.length > 0) {
-    return [
-      { type: "text", text: m.content },
-      ...m.images.map((url) => ({
-        type: "image_url" as const,
-        image_url: { url },
-      })),
-    ];
+    if (vision) {
+      return [
+        { type: "text", text: m.content },
+        ...m.images.map((url) => ({
+          type: "image_url" as const,
+          image_url: { url },
+        })),
+      ];
+    }
+    // Strip images for text-only models so the API doesn't 400.
+    const note = `[${m.images.length} image attachment${m.images.length > 1 ? "s" : ""} omitted — current model has no vision support]`;
+    return m.content ? `${m.content}\n\n${note}` : note;
   }
   return m.content;
 };
@@ -65,13 +85,14 @@ export async function streamChat({
   onDelta,
   onUsage,
 }: StreamArgs): Promise<void> {
+  const vision = isVisionModel(settings.model);
   const apiMessages = [
     ...(settings.systemPrompt.trim()
       ? [{ role: "system" as const, content: settings.systemPrompt.trim() }]
       : []),
     ...messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({ role: m.role, content: toApiContent(m) })),
+      .map((m) => ({ role: m.role, content: toApiContent(m, vision) })),
   ];
 
   const body: Record<string, unknown> = {

@@ -17,13 +17,14 @@ interface Props {
   onStop?: () => void;
   streaming?: boolean;
   disabled?: boolean;
+  modelSupportsVision?: boolean;
 }
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
-  { onSend, onStop, streaming, disabled },
+  { onSend, onStop, streaming, disabled, modelSupportsVision = true },
   ref,
 ) {
   const [value, setValue] = useState("");
@@ -49,6 +50,10 @@ export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
+    if (!modelSupportsVision) {
+      toast.error("Current model has no vision support. Switch to a vision-capable model (e.g. gpt-4o, claude-3.5, gemini, llama-3.2-vision) to attach images.");
+      return;
+    }
     const next: string[] = [];
     for (const f of Array.from(files)) {
       if (!f.type.startsWith("image/")) {
