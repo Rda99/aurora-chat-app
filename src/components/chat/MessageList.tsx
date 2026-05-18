@@ -12,6 +12,7 @@ interface Props {
   awaitingFirstToken: boolean;
   onPickSuggestion: (text: string) => void;
   onRegenerate: () => void;
+  onEditUser: (messageId: string, newContent: string) => void;
 }
 
 export function MessageList({
@@ -20,6 +21,7 @@ export function MessageList({
   awaitingFirstToken,
   onPickSuggestion,
   onRegenerate,
+  onEditUser,
 }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [atBottom, setAtBottom] = useState(true);
@@ -62,7 +64,18 @@ export function MessageList({
       >
         <div className="mx-auto max-w-[860px] pb-4 pt-2">
           {messages.map((m, i) => {
-            if (m.role === "user") return <UserMessage key={m.id} message={m} />;
+            if (m.role === "user")
+              return (
+                <UserMessage
+                  key={m.id}
+                  message={m}
+                  onEdit={
+                    streamingId
+                      ? undefined
+                      : (newContent) => onEditUser(m.id, newContent)
+                  }
+                />
+              );
             if (m.role === "assistant") {
               const isLast = i === messages.length - 1;
               return (
