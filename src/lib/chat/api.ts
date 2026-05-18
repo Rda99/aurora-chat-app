@@ -85,13 +85,14 @@ export async function streamChat({
   onDelta,
   onUsage,
 }: StreamArgs): Promise<void> {
+  const vision = isVisionModel(settings.model);
   const apiMessages = [
     ...(settings.systemPrompt.trim()
       ? [{ role: "system" as const, content: settings.systemPrompt.trim() }]
       : []),
     ...messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({ role: m.role, content: toApiContent(m) })),
+      .map((m) => ({ role: m.role, content: toApiContent(m, vision) })),
   ];
 
   const body: Record<string, unknown> = {
