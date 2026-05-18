@@ -272,6 +272,7 @@ function ChatApp() {
           onSend={sendMessage}
           onStop={handleStop}
           streaming={streamingId !== null}
+          modelSupportsVision={isVisionModel(settings.model)}
         />
       </main>
 
