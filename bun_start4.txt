@@ -1,0 +1,2 @@
+$ node start.js
+Server listening on port 3000

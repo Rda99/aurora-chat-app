@@ -40,11 +40,7 @@ export function AssistantMessage({ message, streaming, onRegenerate }: Props) {
                 icon={copied ? <Check size={14} /> : <Copy size={14} />}
               />
               {onRegenerate && (
-                <IconBtn
-                  onClick={onRegenerate}
-                  label="Regenerate"
-                  icon={<RefreshCw size={14} />}
-                />
+                <IconBtn onClick={onRegenerate} label="Regenerate" icon={<RefreshCw size={14} />} />
               )}
               <IconBtn
                 onClick={() => setFeedback(feedback === "up" ? null : "up")}
@@ -61,7 +57,8 @@ export function AssistantMessage({ message, streaming, onRegenerate }: Props) {
             </div>
             {message.usage && (
               <span className="text-[11px] text-muted-foreground/70 opacity-0 transition-opacity group-hover:opacity-100">
-                {message.usage.prompt} in · {message.usage.completion} out · {message.usage.total} tokens
+                {message.usage.prompt} in · {message.usage.completion} out · {message.usage.total}{" "}
+                tokens
               </span>
             )}
           </div>

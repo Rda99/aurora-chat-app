@@ -119,10 +119,7 @@ export function ChatHeader({
               className="hidden items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-accent sm:flex"
               title="Switch model"
             >
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: provider.dot }}
-              />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: provider.dot }} />
               <span className="font-medium text-foreground/80">{provider.name}</span>
               <span className="text-muted-foreground/60">·</span>
               <span className="max-w-[160px] truncate">{settings.model || "no model"}</span>

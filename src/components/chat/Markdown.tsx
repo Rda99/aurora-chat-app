@@ -6,13 +6,7 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
-function CodeBlock({
-  language,
-  value,
-}: {
-  language: string;
-  value: string;
-}) {
+function CodeBlock({ language, value }: { language: string; value: string }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(value);
@@ -48,11 +42,7 @@ function CodeBlock({
   );
 }
 
-export const Markdown = memo(function Markdown({
-  children,
-}: {
-  children: string;
-}) {
+export const Markdown = memo(function Markdown({ children }: { children: string }) {
   return (
     <div className="prose-chat text-[15px] leading-relaxed text-foreground">
       <ReactMarkdown

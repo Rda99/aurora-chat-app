@@ -25,13 +25,7 @@ export interface Chat {
   messages: Message[];
 }
 
-export type ProviderId =
-  | "ollama"
-  | "openrouter"
-  | "groq"
-  | "together"
-  | "openai"
-  | "custom";
+export type ProviderId = "ollama" | "openrouter" | "groq" | "together" | "openai" | "custom";
 
 export interface Settings {
   providerId: ProviderId;

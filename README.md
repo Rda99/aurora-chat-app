@@ -22,14 +22,14 @@ A fast, multi-provider AI chat interface built with React, TanStack Start, and T
 
 ## Supported Providers
 
-| Provider | Endpoint | Requires API Key | Notes |
-|----------|----------|------------------|-------|
-| **Ollama** | `http://localhost:11434/v1` | No | Run models locally |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | Yes | Access 200+ models, free tier available |
-| **Groq** | `https://api.groq.com/openai/v1` | Yes | Ultra-fast inference, free tier |
-| **Together AI** | `https://api.together.xyz/v1` | Yes | Pay-as-you-go |
-| **OpenAI** | `https://api.openai.com/v1` | Yes | GPT-4o, GPT-4o-mini, etc. |
-| **Custom** | Any URL | Optional | Any OpenAI-compatible API |
+| Provider        | Endpoint                         | Requires API Key | Notes                                   |
+| --------------- | -------------------------------- | ---------------- | --------------------------------------- |
+| **Ollama**      | `http://localhost:11434/v1`      | No               | Run models locally                      |
+| **OpenRouter**  | `https://openrouter.ai/api/v1`   | Yes              | Access 200+ models, free tier available |
+| **Groq**        | `https://api.groq.com/openai/v1` | Yes              | Ultra-fast inference, free tier         |
+| **Together AI** | `https://api.together.xyz/v1`    | Yes              | Pay-as-you-go                           |
+| **OpenAI**      | `https://api.openai.com/v1`      | Yes              | GPT-4o, GPT-4o-mini, etc.               |
+| **Custom**      | Any URL                          | Optional         | Any OpenAI-compatible API               |
 
 ## Quick Start
 

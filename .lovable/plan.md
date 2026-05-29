@@ -7,6 +7,7 @@ Browser calls providers directly. Note: this requires the provider to allow CORS
 ## Design tokens (`src/styles.css`)
 
 Override dark theme to match spec:
+
 - `--background: #0f0f0f`, sidebar `#161616`, chat `#1e1e1e`, bubble `#252525`
 - `--primary: #00c2a8` (teal accent)
 - `--border: rgba(255,255,255,0.07)`

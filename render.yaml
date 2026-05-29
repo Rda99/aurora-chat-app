@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: nexusai-chat
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start

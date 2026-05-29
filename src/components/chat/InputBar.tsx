@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { ArrowUp, Globe, Mic, MicOff, Paperclip, Square, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,7 +45,9 @@ export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
     if (!modelSupportsVision) {
-      toast.error("Current model has no vision support. Switch to a vision-capable model (e.g. gpt-4o, claude-3.5, gemini, llama-3.2-vision) to attach images.");
+      toast.error(
+        "Current model has no vision support. Switch to a vision-capable model (e.g. gpt-4o, claude-3.5, gemini, llama-3.2-vision) to attach images.",
+      );
       return;
     }
     const next: string[] = [];
@@ -75,8 +71,7 @@ export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
     setImages((curr) => [...curr, ...next].slice(0, MAX_IMAGES));
   };
 
-  const removeImage = (i: number) =>
-    setImages((curr) => curr.filter((_, idx) => idx !== i));
+  const removeImage = (i: number) => setImages((curr) => curr.filter((_, idx) => idx !== i));
 
   const submit = () => {
     const text = value.trim();
@@ -119,7 +114,8 @@ export const InputBar = forwardRef<InputBarHandle, Props>(function InputBar(
         else interim += t;
       }
       setValue((prev) =>
-        (prev.replace(/\s*\[\.\.\.\].*$/, "").trimEnd() +
+        (
+          prev.replace(/\s*\[\.\.\.\].*$/, "").trimEnd() +
           (finalText ? " " + finalText : " [...]" + interim)
         ).trimStart(),
       );

@@ -32,10 +32,7 @@ const endpointUrl = (settings: Settings, path: string) => {
 
 type ApiContent =
   | string
-  | Array<
-      | { type: "text"; text: string }
-      | { type: "image_url"; image_url: { url: string } }
-    >;
+  | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
 
 // Heuristic: which model slugs accept multimodal image_url content.
 export const isVisionModel = (model: string): boolean => {

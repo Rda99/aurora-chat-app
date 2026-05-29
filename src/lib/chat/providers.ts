@@ -100,8 +100,7 @@ export const PROVIDERS: ProviderPreset[] = [
   },
 ];
 
-export const getProvider = (id: ProviderId) =>
-  PROVIDERS.find((p) => p.id === id) ?? PROVIDERS[0];
+export const getProvider = (id: ProviderId) => PROVIDERS.find((p) => p.id === id) ?? PROVIDERS[0];
 
 export const DEFAULT_SETTINGS: Settings = {
   providerId: "ollama",
