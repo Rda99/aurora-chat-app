@@ -1,24 +1,23 @@
 import { createServer } from "node:http";
 import { readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Ensure Windows compatibility and absolute path loading for ES modules
+const serverEntryPath = join(__dirname, "dist", "server", "index.js");
+const serverEntryUrl = pathToFileURL(serverEntryPath).href;
+
 // Dynamic import the server handler
-import("./dist/server/index.js")
+import(serverEntryUrl)
   .then((m) => {
     // Determine the actual handler, TanStack typically exports the request handler directly or under .default.fetch
-    const fetchHandler =
-      typeof m.default === "function"
-        ? m.default
-        : m.default && m.default.fetch
-          ? m.default.fetch
-          : m.fetch;
+    const fetchHandler = typeof m.default === 'function' ? m.default : (m.default && m.default.fetch ? m.default.fetch : m.fetch);
 
-    if (typeof fetchHandler !== "function") {
-      throw new Error("Could not find a valid fetch handler in dist/server/index.js");
+    if (typeof fetchHandler !== 'function') {
+        throw new Error("Could not find a valid fetch handler in dist/server/index.js");
     }
 
     const port = process.env.PORT || 3000;
