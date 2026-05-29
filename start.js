@@ -6,18 +6,24 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Ensure Windows compatibility and absolute path loading for ES modules
-const serverEntryPath = join(__dirname, "dist", "server", "index.js");
+// Dynamic import the server handler
+// Fix path resolution specifically for Render's deployment environment layout
+const distDir = join(process.cwd(), "dist");
+const serverEntryPath = join(distDir, "server", "index.js");
 const serverEntryUrl = pathToFileURL(serverEntryPath).href;
 
-// Dynamic import the server handler
 import(serverEntryUrl)
   .then((m) => {
     // Determine the actual handler, TanStack typically exports the request handler directly or under .default.fetch
-    const fetchHandler = typeof m.default === 'function' ? m.default : (m.default && m.default.fetch ? m.default.fetch : m.fetch);
+    const fetchHandler =
+      typeof m.default === "function"
+        ? m.default
+        : m.default && m.default.fetch
+          ? m.default.fetch
+          : m.fetch;
 
-    if (typeof fetchHandler !== 'function') {
-        throw new Error("Could not find a valid fetch handler in dist/server/index.js");
+    if (typeof fetchHandler !== "function") {
+      throw new Error("Could not find a valid fetch handler in dist/server/index.js");
     }
 
     const port = process.env.PORT || 3000;
@@ -45,7 +51,7 @@ import(serverEntryUrl)
         // 1. Try to serve static files from dist/client
         if (req.url && req.method === "GET") {
           const urlPath = req.url.split("?")[0]; // Remove query params
-          let filePath = join(__dirname, "dist", "client", urlPath);
+          let filePath = join(distDir, "client", urlPath);
 
           try {
             const stat = statSync(filePath);
