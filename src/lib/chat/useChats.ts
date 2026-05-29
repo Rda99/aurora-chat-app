@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Chat, Message, TokenUsage } from "./types";
-import {
-  loadActiveId,
-  loadChats,
-  saveActiveId,
-  saveChats,
-} from "./storage";
+import { loadActiveId, loadChats, saveActiveId, saveChats } from "./storage";
 
 const uid = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -43,9 +38,7 @@ export function useChats() {
 
   const ensureChat = useCallback((firstUserContent: string): string => {
     const id = uid();
-    const title =
-      firstUserContent.slice(0, 40).trim() +
-      (firstUserContent.length > 40 ? "…" : "");
+    const title = firstUserContent.slice(0, 40).trim() + (firstUserContent.length > 40 ? "…" : "");
     const chat: Chat = {
       id,
       title: title || "New chat",
@@ -61,49 +54,37 @@ export function useChats() {
   const appendMessage = useCallback((chatId: string, msg: Message) => {
     setChats((prev) =>
       prev.map((c) =>
+        c.id === chatId ? { ...c, messages: [...c.messages, msg], updatedAt: Date.now() } : c,
+      ),
+    );
+  }, []);
+
+  const updateMessage = useCallback((chatId: string, msgId: string, content: string) => {
+    setChats((prev) =>
+      prev.map((c) =>
         c.id === chatId
-          ? { ...c, messages: [...c.messages, msg], updatedAt: Date.now() }
+          ? {
+              ...c,
+              messages: c.messages.map((m) => (m.id === msgId ? { ...m, content } : m)),
+              updatedAt: Date.now(),
+            }
           : c,
       ),
     );
   }, []);
 
-  const updateMessage = useCallback(
-    (chatId: string, msgId: string, content: string) => {
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatId
-            ? {
-                ...c,
-                messages: c.messages.map((m) =>
-                  m.id === msgId ? { ...m, content } : m,
-                ),
-                updatedAt: Date.now(),
-              }
-            : c,
-        ),
-      );
-    },
-    [],
-  );
-
-  const setMessageUsage = useCallback(
-    (chatId: string, msgId: string, usage: TokenUsage) => {
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chatId
-            ? {
-                ...c,
-                messages: c.messages.map((m) =>
-                  m.id === msgId ? { ...m, usage } : m,
-                ),
-              }
-            : c,
-        ),
-      );
-    },
-    [],
-  );
+  const setMessageUsage = useCallback((chatId: string, msgId: string, usage: TokenUsage) => {
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === chatId
+          ? {
+              ...c,
+              messages: c.messages.map((m) => (m.id === msgId ? { ...m, usage } : m)),
+            }
+          : c,
+      ),
+    );
+  }, []);
 
   /** Truncate a chat at (and including) msgId; returns the kept history (excluding msgId). */
   const truncateAt = useCallback((chatId: string, msgId: string): Message[] => {
@@ -130,9 +111,7 @@ export function useChats() {
   }, []);
 
   const togglePin = useCallback((chatId: string) => {
-    setChats((prev) =>
-      prev.map((c) => (c.id === chatId ? { ...c, pinned: !c.pinned } : c)),
-    );
+    setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, pinned: !c.pinned } : c)));
   }, []);
 
   const removeLastAssistant = useCallback((chatId: string) => {

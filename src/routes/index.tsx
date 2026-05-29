@@ -33,8 +33,7 @@ function ChatApp() {
     if (e instanceof ApiError) {
       if (e.status === 401) toast.error("Invalid API key. Check Settings.");
       else if (e.status === 429) toast.error("Rate limit hit. Wait a moment.");
-      else if (e.status === 0)
-        toast.error("Cannot reach API. Check endpoint URL or CORS.");
+      else if (e.status === 0) toast.error("Cannot reach API. Check endpoint URL or CORS.");
       else toast.error(`Request failed (${e.status})`);
     } else {
       toast.error("Something went wrong.");
@@ -248,9 +247,7 @@ function ChatApp() {
           chat={chatsApi.activeChat}
           settings={settings}
           sessionTokens={sessionTokens}
-          onRename={(t) =>
-            chatsApi.activeChat && chatsApi.renameChat(chatsApi.activeChat.id, t)
-          }
+          onRename={(t) => chatsApi.activeChat && chatsApi.renameChat(chatsApi.activeChat.id, t)}
           onChangeModel={(model) => {
             updateSettings({ ...settings, model });
             toast.success(`Model: ${model}`);

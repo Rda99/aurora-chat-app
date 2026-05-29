@@ -12,11 +12,7 @@ import {
   Upload,
   User,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -220,11 +216,7 @@ function HistoryItem({
           active ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent/60"
         }`}
       >
-        <button
-          onClick={onSelect}
-          className="min-w-0 flex-1 truncate text-left"
-          title={chat.title}
-        >
+        <button onClick={onSelect} className="min-w-0 flex-1 truncate text-left" title={chat.title}>
           {chat.title}
         </button>
         <button

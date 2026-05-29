@@ -57,11 +57,7 @@ export function MessageList({
 
   return (
     <div className="relative flex-1 overflow-hidden">
-      <div
-        ref={scrollRef}
-        onScroll={onScroll}
-        className="scrollbar-thin h-full overflow-y-auto"
-      >
+      <div ref={scrollRef} onScroll={onScroll} className="scrollbar-thin h-full overflow-y-auto">
         <div className="mx-auto max-w-[860px] pb-4 pt-2">
           {messages.map((m, i) => {
             if (m.role === "user")
@@ -69,11 +65,7 @@ export function MessageList({
                 <UserMessage
                   key={m.id}
                   message={m}
-                  onEdit={
-                    streamingId
-                      ? undefined
-                      : (newContent) => onEditUser(m.id, newContent)
-                  }
+                  onEdit={streamingId ? undefined : (newContent) => onEditUser(m.id, newContent)}
                 />
               );
             if (m.role === "assistant") {

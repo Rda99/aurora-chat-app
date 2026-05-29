@@ -74,7 +74,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "NexusAI — Multi-provider AI chat" },
-      { name: "description", content: "Fast, private, multi-provider AI chat. Connect Ollama, OpenRouter, Groq, Together, OpenAI or any OpenAI-compatible endpoint." },
+      {
+        name: "description",
+        content:
+          "Fast, private, multi-provider AI chat. Connect Ollama, OpenRouter, Groq, Together, OpenAI or any OpenAI-compatible endpoint.",
+      },
       { property: "og:title", content: "NexusAI" },
       { property: "og:description", content: "Multi-provider AI chat client" },
       { property: "og:type", content: "website" },

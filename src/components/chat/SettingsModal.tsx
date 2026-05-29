@@ -93,16 +93,11 @@ export function SettingsModal({ open, onOpenChange, settings, onSave }: Props) {
                     key={p.id}
                     onClick={() => setProvider(p.id)}
                     className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-colors ${
-                      active
-                        ? "border-primary/60 bg-primary/5"
-                        : "border-border hover:bg-accent"
+                      active ? "border-primary/60 bg-primary/5" : "border-border hover:bg-accent"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: p.dot }}
-                      />
+                      <span className="h-2 w-2 rounded-full" style={{ background: p.dot }} />
                       <span className="text-sm font-medium">{p.name}</span>
                     </div>
                     <span className="text-[11px] text-muted-foreground">{p.label}</span>
@@ -145,7 +140,9 @@ export function SettingsModal({ open, onOpenChange, settings, onSave }: Props) {
                 value={draft.apiKey}
                 onChange={(e) => setDraft({ ...draft, apiKey: e.target.value })}
                 placeholder={
-                  currentProvider.requiresKey ? "Paste your API key" : "Not required for this provider"
+                  currentProvider.requiresKey
+                    ? "Paste your API key"
+                    : "Not required for this provider"
                 }
                 className="pr-16"
               />
@@ -205,9 +202,7 @@ export function SettingsModal({ open, onOpenChange, settings, onSave }: Props) {
                 type="number"
                 min={1}
                 value={draft.maxTokens}
-                onChange={(e) =>
-                  setDraft({ ...draft, maxTokens: Number(e.target.value) || 0 })
-                }
+                onChange={(e) => setDraft({ ...draft, maxTokens: Number(e.target.value) || 0 })}
               />
             </div>
           </section>
@@ -215,9 +210,7 @@ export function SettingsModal({ open, onOpenChange, settings, onSave }: Props) {
           <section className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
             <div>
               <p className="text-sm font-medium">Stream responses</p>
-              <p className="text-[11px] text-muted-foreground">
-                Show tokens as they arrive.
-              </p>
+              <p className="text-[11px] text-muted-foreground">Show tokens as they arrive.</p>
             </div>
             <Switch
               checked={draft.stream}
