@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
-import { readFileSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readFileSync, statSync, existsSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -10,14 +10,11 @@ const __dirname = dirname(__filename);
 // Fix path resolution specifically for Render's deployment environment layout
 // It seems Render runs node inside /opt/render/project/src
 let distDir = join(process.cwd(), "dist");
-try {
-  const stat = statSync(distDir);
-  if (!stat.isDirectory()) {
-    distDir = join(__dirname, "dist");
-  }
-} catch (e) {
+
+if (!existsSync(distDir)) {
   distDir = join(__dirname, "dist");
 }
+
 const serverEntryPath = join(distDir, "server", "index.js");
 const serverEntryUrl = pathToFileURL(serverEntryPath).href;
 
