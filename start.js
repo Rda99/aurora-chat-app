@@ -2,14 +2,25 @@ import { createServer } from "node:http";
 import { readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { resolve } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Dynamic import the server handler
-// Fix path resolution specifically for Render's deployment environment layout
-// It seems Render runs node inside /opt/render/project/src
-const distDir = join(process.cwd(), "dist");
+// Render creates a slightly different path logic sometimes depending on where the script runs.
+// We must try to dynamically resolve it.
+let distDir = join(process.cwd(), "dist");
+
+try {
+  const stat = statSync(distDir);
+  if (!stat.isDirectory()) {
+    distDir = join(__dirname, "dist");
+  }
+} catch (e) {
+  distDir = join(__dirname, "dist");
+}
+
 const serverEntryPath = join(distDir, "server", "index.js");
 const serverEntryUrl = pathToFileURL(serverEntryPath).href;
 
@@ -31,6 +42,7 @@ import(serverEntryUrl)
       throw new Error("Could not find a valid fetch handler in dist/server/index.js");
     }
 
+    // Render sets the PORT environment variable. We MUST use it.
     const port = process.env.PORT || 3000;
 
     const mimeTypes = {
@@ -111,7 +123,8 @@ import(serverEntryUrl)
         res.statusCode = 500;
         res.end("Internal Server Error");
       }
-    }).listen(port, () => {
+      // Make sure we bind to 0.0.0.0
+    }).listen(port, "0.0.0.0", () => {
       console.log(`Server listening on port ${port}`);
     });
   })
