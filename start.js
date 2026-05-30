@@ -8,9 +8,12 @@ const __dirname = dirname(__filename);
 
 // Dynamic import the server handler
 // Fix path resolution specifically for Render's deployment environment layout
+// It seems Render runs node inside /opt/render/project/src
 const distDir = join(process.cwd(), "dist");
 const serverEntryPath = join(distDir, "server", "index.js");
 const serverEntryUrl = pathToFileURL(serverEntryPath).href;
+
+console.log("Loading server handler from:", serverEntryPath);
 
 import(serverEntryUrl)
   .then((m) => {
