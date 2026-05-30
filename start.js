@@ -1,23 +1,33 @@
 import { createServer } from "node:http";
 import { readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Dynamic import the server handler
-import("./dist/server/index.js")
+// Fix path resolution specifically for Render's deployment environment layout
+// It seems Render runs node inside /opt/render/project/src
+const distDir = join(process.cwd(), "dist");
+const serverEntryPath = join(distDir, "server", "index.js");
+const serverEntryUrl = pathToFileURL(serverEntryPath).href;
+
+console.log("Loading server handler from:", serverEntryPath);
+
+import(serverEntryUrl)
   .then((m) => {
-    // Determine the actual handler, TanStack typically exports the request handler directly or under .default.fetch
+    // Check if the default export has a fetch handler (often inside w.fetch or default.fetch)
+    const serverModule = m.default || m;
     const fetchHandler =
-      typeof m.default === "function"
-        ? m.default
-        : m.default && m.default.fetch
-          ? m.default.fetch
-          : m.fetch;
+      typeof serverModule.fetch === "function"
+        ? serverModule.fetch.bind(serverModule)
+        : typeof serverModule === "function"
+          ? serverModule
+          : null;
 
     if (typeof fetchHandler !== "function") {
+      console.error("Exports from dist/server/index.js:", Object.keys(m));
       throw new Error("Could not find a valid fetch handler in dist/server/index.js");
     }
 
@@ -46,7 +56,7 @@ import("./dist/server/index.js")
         // 1. Try to serve static files from dist/client
         if (req.url && req.method === "GET") {
           const urlPath = req.url.split("?")[0]; // Remove query params
-          let filePath = join(__dirname, "dist", "client", urlPath);
+          let filePath = join(distDir, "client", urlPath);
 
           try {
             const stat = statSync(filePath);
