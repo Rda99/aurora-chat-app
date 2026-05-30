@@ -1,0 +1,2 @@
+Loading server handler from: /app/dist/server/index.js
+Server listening on port 3000
