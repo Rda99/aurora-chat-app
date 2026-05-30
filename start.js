@@ -14,15 +14,17 @@ const serverEntryUrl = pathToFileURL(serverEntryPath).href;
 
 import(serverEntryUrl)
   .then((m) => {
-    // Determine the actual handler, TanStack typically exports the request handler directly or under .default.fetch
+    // Check if the default export has a fetch handler (often inside w.fetch or default.fetch)
+    const serverModule = m.default || m;
     const fetchHandler =
-      typeof m.default === "function"
-        ? m.default
-        : m.default && m.default.fetch
-          ? m.default.fetch
-          : m.fetch;
+      typeof serverModule.fetch === "function"
+        ? serverModule.fetch.bind(serverModule)
+        : typeof serverModule === "function"
+          ? serverModule
+          : null;
 
     if (typeof fetchHandler !== "function") {
+      console.error("Exports from dist/server/index.js:", Object.keys(m));
       throw new Error("Could not find a valid fetch handler in dist/server/index.js");
     }
 
